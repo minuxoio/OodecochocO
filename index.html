@@ -2,25 +2,46 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#fde8f8" />
     <title>💖🍫🍫🍫💖</title>
     <style>
+      html,
+      body {
+        height: 100%;
+      }
       body {
         margin: 0;
+        position: fixed;
+        inset: 0;
         overflow: hidden;
+        overscroll-behavior: none;
+        background-color: #fde8f8;
         background-image: url("./IMG_4878.JPG");
         background-size: cover;
         background-position: center;
         font-family: "Hiragino Maru Gothic ProN", "Rounded M+ 1c", sans-serif;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
       }
       canvas {
         display: block;
+        touch-action: none; /* 畫布上的手勢全部交給程式處理 */
       }
 
       #info {
         position: absolute;
-        top: 20px;
+        top: calc(20px + env(safe-area-inset-top));
+        left: 0;
         width: 100%;
+        box-sizing: border-box;
+        padding: 0 16px;
         text-align: center;
         color: #ff6699;
         font-weight: bold;
@@ -32,7 +53,7 @@
 
       #ui-container {
         position: absolute;
-        bottom: 30px;
+        bottom: calc(30px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -40,6 +61,7 @@
         align-items: center;
         gap: 10px;
         z-index: 10;
+        touch-action: manipulation;
       }
 
       #tools {
@@ -51,11 +73,14 @@
         border-radius: 40px;
         box-shadow: 0 4px 15px rgba(255, 102, 153, 0.2);
         backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
       }
 
       .tool-btn {
         width: 45px;
         height: 45px;
+        flex-shrink: 0;
+        box-sizing: border-box;
         border-radius: 50%;
         border: 3px solid white;
         cursor: pointer;
@@ -68,9 +93,6 @@
         align-items: center;
         font-size: 1.2rem;
         color: #fff;
-      }
-      .tool-btn:hover {
-        transform: scale(1.15);
       }
       .tool-btn.active {
         border-color: #ff6699;
@@ -102,13 +124,21 @@
         display: flex;
         gap: 15px;
         align-items: center;
+        justify-content: center;
         background: rgba(255, 255, 255, 0.6);
         padding: 10px 25px;
         border-radius: 40px;
         box-shadow: 0 4px 15px rgba(255, 102, 153, 0.2);
         backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         font-weight: bold;
         color: #ff6699;
+      }
+      .size-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
       }
 
       .action-btn {
@@ -120,15 +150,12 @@
         cursor: pointer;
         font-weight: bold;
         font-size: 1rem;
+        white-space: nowrap;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition:
           background 0.2s,
           transform 0.2s;
         font-family: inherit;
-      }
-      .action-btn:hover {
-        background: #ff3377;
-        transform: scale(1.05);
       }
       .action-btn:active {
         transform: scale(0.95);
@@ -139,8 +166,19 @@
         color: #d11a2a;
         border: 2px solid #fff;
       }
-      #eat-btn:hover {
-        background: #ff9a9e;
+
+      /* 只有真的有滑鼠的裝置才做 hover 效果，避免手機上按鈕卡在放大狀態 */
+      @media (hover: hover) {
+        .tool-btn:hover {
+          transform: scale(1.15);
+        }
+        .action-btn:hover {
+          background: #ff3377;
+          transform: scale(1.05);
+        }
+        #eat-btn:hover {
+          background: #ff9a9e;
+        }
       }
 
       input[type="range"] {
@@ -152,7 +190,10 @@
         top: 40%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 4rem;
+        width: max-content;
+        max-width: 92vw;
+        text-align: center;
+        font-size: clamp(2rem, 9vw, 4rem);
         color: #ff3377;
         font-weight: bold;
         text-shadow:
@@ -173,6 +214,88 @@
           transform: translate(-50%, -50%) scale(1);
         }
       }
+
+      /* ===== 手機版面 ===== */
+      @media (max-width: 600px) {
+        #info {
+          top: calc(12px + env(safe-area-inset-top));
+          font-size: 1rem;
+        }
+        #ui-container {
+          bottom: calc(12px + env(safe-area-inset-bottom));
+          width: calc(100% - 20px);
+          gap: 8px;
+        }
+        #tools {
+          gap: 8px;
+          padding: 10px 14px;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .tool-btn {
+          width: 40px;
+          height: 40px;
+          font-size: 1.2rem;
+        }
+        #controls {
+          flex-wrap: wrap;
+          gap: 8px 10px;
+          padding: 10px 14px;
+          border-radius: 24px;
+          max-width: 100%;
+          box-sizing: border-box;
+          font-size: 0.9rem;
+        }
+        .size-group {
+          width: 100%;
+          justify-content: center;
+        }
+        .size-group input[type="range"] {
+          flex: 1;
+          max-width: 220px;
+          height: 28px;
+        }
+        .action-btn {
+          padding: 8px 12px;
+          font-size: 0.9rem;
+        }
+      }
+      @media (max-width: 360px) {
+        .tool-btn {
+          width: 36px;
+          height: 36px;
+          font-size: 1rem;
+        }
+        #tools {
+          gap: 6px;
+          padding: 8px 10px;
+        }
+        .action-btn {
+          padding: 7px 10px;
+          font-size: 0.85rem;
+        }
+      }
+      /* 手機橫放：高度很矮，把兩排工具並排 */
+      @media (max-height: 500px) and (orientation: landscape) {
+        #ui-container {
+          flex-direction: row;
+          width: auto;
+          bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+        #info {
+          top: 8px;
+          font-size: 0.95rem;
+        }
+        #controls {
+          flex-wrap: nowrap;
+        }
+        .size-group {
+          width: auto;
+        }
+        .size-group input[type="range"] {
+          width: 90px;
+        }
+      }
     </style>
 
     <script
@@ -187,7 +310,13 @@
   <body>
     <div id="info">左鍵畫畫，右鍵旋轉視角 🎀</div>
 
-    <video id="webcam-video" autoplay playsinline style="display: none"></video>
+    <video
+      id="webcam-video"
+      autoplay
+      playsinline
+      muted
+      style="display: none"
+    ></video>
 
     <div id="oishii-msg">
       ごちそうさまでした！💖<br /><span style="font-size: 1.5rem"></span>
@@ -195,18 +324,20 @@
 
     <div id="ui-container">
       <div id="controls">
-        <label for="size-slider">太さ：</label>
-        <input
-          type="range"
-          id="size-slider"
-          min="0.05"
-          max="0.4"
-          step="0.05"
-          value="0.2"
-        />
+        <div class="size-group">
+          <label for="size-slider">太さ：</label>
+          <input
+            type="range"
+            id="size-slider"
+            min="0.05"
+            max="0.4"
+            step="0.05"
+            value="0.2"
+          />
+        </div>
         <button id="undo-btn" class="action-btn">戻る ↶</button>
         <button id="clear-btn" class="action-btn">もう1コ作る ↺</button>
-        <button id="eat-btn" class="action-btn">食べる！</button>
+        <button id="eat-btn" class="action-btn">食べる！📸</button>
       </div>
 
       <div id="tools">
@@ -268,6 +399,17 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
+      // 觸控裝置（手機、平板）判斷，用來切換提示文字
+      const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+      const DRAW_HINT = isTouchDevice
+        ? "單指畫畫，雙指旋轉／縮放 🎀"
+        : "左鍵畫畫，右鍵旋轉視角 🎀";
+      const EAT_HINT = isTouchDevice
+        ? "對著鏡頭「啊～」張大嘴巴吃掉它！😋<br><small>（或點一下巧克力）</small>"
+        : "對著螢幕「啊～」張大嘴巴吃掉它！😋<br><small>（或點一下巧克力）</small>";
+      const infoEl = document.getElementById("info");
+      infoEl.innerHTML = DRAW_HINT;
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
         45,
@@ -275,26 +417,56 @@
         0.1,
         100,
       );
-      camera.position.set(0, 12, 12);
 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
       });
+      // 手機螢幕像素密度很高，限制在 2 倍以內避免太耗電、太卡
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       document.body.appendChild(renderer.domElement);
+      const canvas = renderer.domElement;
 
-      const controls = new OrbitControls(camera, renderer.domElement);
+      const controls = new OrbitControls(camera, canvas);
       controls.enableDamping = true;
+      controls.enablePan = false;
+      controls.minDistance = 8;
+      controls.maxDistance = 60;
       controls.maxPolarAngle = Math.PI / 2 - 0.1;
       controls.mouseButtons = {
         LEFT: null,
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.ROTATE,
       };
+      // 觸控：單指留給畫畫，雙指旋轉 + 縮放
+      controls.touches = {
+        ONE: null,
+        TWO: THREE.TOUCH.DOLLY_ROTATE,
+      };
       window.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      // ==========================================
+      // 📱 依螢幕比例自動調整鏡頭距離（直式手機會拉遠，巧克力才不會被切掉）
+      // ==========================================
+      const DRAW_VIEW = new THREE.Vector3(0, 12, 12);
+      const EAT_VIEW = new THREE.Vector3(0, 5, 15);
+      const FIT_RADIUS = 6.5; // 巧克力加錫箔杯大約的半徑，多留一點邊
+
+      function minFitDistance() {
+        const halfV = THREE.MathUtils.degToRad(camera.fov / 2);
+        const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
+        return FIT_RADIUS / Math.sin(Math.min(halfV, halfH));
+      }
+      function setView(base) {
+        const dist = Math.max(base.length(), minFitDistance());
+        camera.position.copy(base).setLength(dist);
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+      setView(DRAW_VIEW);
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
       scene.add(ambientLight);
@@ -567,13 +739,9 @@
 
       function getIntersectData(event) {
         if (isEatMode) return null; // 咬咬模式禁止畫畫
-        let clientX =
-          event.clientX || (event.touches && event.touches[0].clientX);
-        let clientY =
-          event.clientY || (event.touches && event.touches[0].clientY);
-        if (clientX === undefined) return null;
-        mouse.x = (clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         const targets = [baseChocolate, ...chocolateGroup.children];
         const intersects = raycaster.intersectObjects(targets, false);
@@ -641,17 +809,13 @@
       }
 
       function startDrawing(event) {
-        if (
-          event.target.closest("#ui-container") ||
-          event.button !== 0 ||
-          isEatMode
-        )
-          return;
+        if (isEatMode) return;
         const hitData = getIntersectData(event);
         if (hitData) {
           isDrawing = true;
           currentActionMeshes = [];
           if (currentTool.startsWith("sprinkle")) {
+            currentPoints = [hitData.point.clone()];
             scatterSprinkles(hitData);
             return;
           }
@@ -704,12 +868,8 @@
       }
 
       function draw(event) {
-        if (
-          !isDrawing ||
-          (event.type === "mousemove" && event.buttons !== 1) ||
-          isEatMode
-        )
-          return;
+        if (!isDrawing || isEatMode) return;
+        if (event.pointerType === "mouse" && (event.buttons & 1) === 0) return;
         const hitData = getIntersectData(event);
         if (hitData) {
           const point = hitData.point.clone();
@@ -761,9 +921,7 @@
         }
       }
 
-      function stopDrawing() {
-        if (isDrawing && currentActionMeshes.length > 0)
-          actionHistory.push(currentActionMeshes);
+      function resetStrokeState() {
         isDrawing = false;
         currentLineMesh = null;
         currentPoints = [];
@@ -772,25 +930,64 @@
         currentActionMeshes = [];
       }
 
-      window.addEventListener("mousedown", startDrawing);
-      window.addEventListener("mousemove", draw);
-      window.addEventListener("mouseup", stopDrawing);
-      window.addEventListener(
-        "touchstart",
-        (e) => {
-          startDrawing(e);
-        },
-        { passive: false },
-      );
-      window.addEventListener(
-        "touchmove",
-        (e) => {
-          e.preventDefault();
-          draw(e);
-        },
-        { passive: false },
-      );
-      window.addEventListener("touchend", stopDrawing);
+      function stopDrawing() {
+        if (isDrawing && currentActionMeshes.length > 0)
+          actionHistory.push(currentActionMeshes);
+        resetStrokeState();
+      }
+
+      // 第二根手指放上來 = 想旋轉視角，把剛剛不小心畫出的那一筆收回
+      function cancelStroke() {
+        if (!isDrawing) return;
+        if (currentLineMesh) currentLineMesh.geometry.dispose();
+        currentActionMeshes.forEach((mesh) => {
+          if (mesh.parent) mesh.parent.remove(mesh);
+        });
+        resetStrokeState();
+      }
+
+      // ==========================================
+      // 📱 統一用 Pointer Events 處理滑鼠與觸控
+      // ==========================================
+      const activePointers = new Set();
+      let drawingPointerId = null;
+
+      canvas.addEventListener("pointerdown", (e) => {
+        activePointers.add(e.pointerId);
+
+        if (isEatMode) {
+          // 吃吃模式：點一下也能咬（沒有鏡頭權限時的備案）
+          if (activePointers.size === 1 && e.button === 0) takeABite();
+          return;
+        }
+
+        if (activePointers.size > 1) {
+          cancelStroke();
+          drawingPointerId = null;
+          return;
+        }
+        if (e.button !== 0) return;
+        startDrawing(e);
+        if (isDrawing) drawingPointerId = e.pointerId;
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        if (e.pointerId !== drawingPointerId) return;
+        // 高頻率觸控裝置會把多個點合併，逐一處理讓線條更順
+        const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+        if (events.length > 1) events.forEach((ce) => draw(ce));
+        else draw(e);
+      });
+
+      const endPointer = (e) => {
+        activePointers.delete(e.pointerId);
+        if (e.pointerId === drawingPointerId) {
+          stopDrawing();
+          drawingPointerId = null;
+        }
+      };
+      window.addEventListener("pointerup", endPointer);
+      window.addEventListener("pointercancel", endPointer);
 
       const buttons = document.querySelectorAll(".tool-btn");
       buttons.forEach((btn) => {
@@ -807,7 +1004,8 @@
         if (actionHistory.length === 0) return;
         const lastAction = actionHistory.pop();
         lastAction.forEach((mesh) => {
-          if (mesh.geometry) mesh.geometry.dispose();
+          if (mesh.geometry && mesh.geometry.type === "TubeGeometry")
+            mesh.geometry.dispose();
           if (mesh.parent) mesh.parent.remove(mesh);
         });
       });
@@ -816,7 +1014,8 @@
         [chocolateGroup, sprinkleGroup].forEach((group) => {
           for (let i = group.children.length - 1; i >= 0; i--) {
             const child = group.children[i];
-            if (child.geometry) child.geometry.dispose();
+            if (child.geometry && child.geometry.type === "TubeGeometry")
+              child.geometry.dispose();
             group.remove(child);
           }
         });
@@ -828,6 +1027,7 @@
         masterGroup.position.set(0, 0, 0);
         masterGroup.rotation.set(0, 0, 0);
         document.getElementById("oishii-msg").style.display = "none";
+        infoEl.innerHTML = isEatMode ? EAT_HINT : DRAW_HINT;
         // 恢復陰影
         masterGroup.traverse((child) => {
           if (child.isMesh) child.castShadow = true;
@@ -838,7 +1038,16 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        // 轉向或視窗變窄時，確保巧克力還完整在畫面內
+        const need = Math.max(minFitDistance(), controls.minDistance);
+        const offset = camera.position.clone().sub(controls.target);
+        if (offset.length() < need) {
+          offset.setLength(need);
+          camera.position.copy(controls.target).add(offset);
+        }
+        controls.maxDistance = Math.max(60, need * 1.5);
       });
+      window.dispatchEvent(new Event("resize"));
 
       // ==========================================
       // 🌟 隱藏攝影機與張嘴吃掉特效邏輯
@@ -849,32 +1058,49 @@
       let cameraInit = false;
 
       function initCamera() {
-        faceMesh = new FaceMesh({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-        });
-        faceMesh.setOptions({
-          maxNumFaces: 1,
-          refineLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5,
-        });
-        faceMesh.onResults(onFaceResults);
-
-        const cam = new Camera(videoElement, {
-          onFrame: async () => {
-            await faceMesh.send({ image: videoElement });
-          },
-          width: 320,
-          height: 240,
-        });
-        cam.start();
         cameraInit = true;
+        if (!navigator.mediaDevices || !window.isSecureContext) {
+          infoEl.innerHTML =
+            "這個網址開不了鏡頭（需要 https）<br><small>點一下巧克力來吃吧！😋</small>";
+          return;
+        }
+        try {
+          faceMesh = new FaceMesh({
+            locateFile: (file) =>
+              `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+          });
+          faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+          faceMesh.onResults(onFaceResults);
+
+          const cam = new Camera(videoElement, {
+            onFrame: async () => {
+              if (isEatMode) await faceMesh.send({ image: videoElement });
+            },
+            width: 320,
+            height: 240,
+            facingMode: "user", // 手機用前鏡頭
+          });
+          cam.start().catch(() => {
+            infoEl.innerHTML =
+              "沒有拿到鏡頭權限<br><small>點一下巧克力來吃吧！😋</small>";
+          });
+        } catch (err) {
+          infoEl.innerHTML =
+            "鏡頭啟動失敗<br><small>點一下巧克力來吃吧！😋</small>";
+        }
       }
 
       function takeABite() {
         if (bitesTaken >= 5) return;
         bitesTaken++;
+
+        // 手機上給一點震動回饋（有支援的裝置才會震）
+        if (navigator.vibrate) navigator.vibrate(40);
 
         // 🌟 觸發 Shader 的咬痕效果！
         biteUniforms.numBites.value = bitesTaken;
@@ -892,8 +1118,7 @@
         if (bitesTaken >= 5) {
           masterGroup.visible = false;
           document.getElementById("oishii-msg").style.display = "block";
-          document.getElementById("info").innerHTML =
-            "按「もう1コ作る ↺」再來一顆！🎀";
+          infoEl.innerHTML = "按「もう1コ作る ↺」再來一顆！🎀";
         }
       }
 
@@ -906,15 +1131,20 @@
           const landmarks = results.multiFaceLandmarks[0];
           const topLip = landmarks[13];
           const bottomLip = landmarks[14];
+          const forehead = landmarks[10];
+          const chin = landmarks[152];
 
-          // 計算上下嘴唇距離
-          const mouthOpenness = Math.abs(topLip.y - bottomLip.y);
-          const THRESHOLD = 0.05;
+          // 嘴巴張開的程度，用臉的高度來換算比例
+          // 這樣手機拿近拿遠都一樣好判斷
+          const faceHeight = Math.abs(chin.y - forehead.y) || 1;
+          const mouthRatio = Math.abs(topLip.y - bottomLip.y) / faceHeight;
+          const OPEN = 0.1;
+          const CLOSE = 0.07;
 
-          if (mouthOpenness > THRESHOLD && !isMouthCurrentlyOpen) {
+          if (mouthRatio > OPEN && !isMouthCurrentlyOpen) {
             isMouthCurrentlyOpen = true;
             takeABite();
-          } else if (mouthOpenness < THRESHOLD - 0.01) {
+          } else if (mouthRatio < CLOSE) {
             isMouthCurrentlyOpen = false;
           }
         }
@@ -922,19 +1152,16 @@
 
       eatBtn.addEventListener("click", () => {
         isEatMode = !isEatMode;
+        cancelStroke();
         if (isEatMode) {
-          document.getElementById("info").innerHTML =
-            "對著螢幕「啊～」張大嘴巴吃掉它！😋";
-          eatBtn.innerHTML = "畫畫模式 🖌️";
-          camera.position.set(0, 5, 15);
-          controls.target.set(0, 0, 0);
-
+          infoEl.innerHTML = EAT_HINT;
+          eatBtn.innerHTML = "畫畫モード 🖌️";
+          setView(EAT_VIEW);
           if (!cameraInit) initCamera();
         } else {
-          document.getElementById("info").innerHTML =
-            "左鍵畫畫，右鍵旋轉視角 🎀";
+          infoEl.innerHTML = DRAW_HINT;
           eatBtn.innerHTML = "食べる！📸";
-          camera.position.set(0, 12, 12);
+          setView(DRAW_VIEW);
         }
       });
 
