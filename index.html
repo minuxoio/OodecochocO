@@ -32,7 +32,10 @@
       }
       canvas {
         display: block;
-        touch-action: none; /* 畫布上的手勢全部交給程式處理 */
+        touch-action: none;
+      }
+      button {
+        font-family: inherit;
       }
 
       #info {
@@ -51,6 +54,59 @@
         z-index: 10;
       }
 
+      /* ===== 上方：巧克力形狀與口味 ===== */
+      #style-bar {
+        position: absolute;
+        top: calc(62px + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+        touch-action: manipulation;
+      }
+      body.eat-mode #style-bar {
+        display: none;
+      }
+      .seg {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 6px 12px;
+        border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(255, 102, 153, 0.2);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        font-weight: bold;
+        font-size: 0.8rem;
+        color: #ff6699;
+        white-space: nowrap;
+      }
+      .chip {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        flex-shrink: 0;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background: #fff;
+        color: #ff6699;
+        font-size: 1.05rem;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+      }
+      .chip.active {
+        border-color: #ff6699;
+        box-shadow: 0 0 8px #ff6699;
+        transform: scale(1.08);
+      }
+
       #ui-container {
         position: absolute;
         bottom: calc(30px + env(safe-area-inset-bottom));
@@ -66,14 +122,28 @@
 
       #tools {
         display: flex;
-        gap: 15px;
+        gap: 12px;
         align-items: center;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        scrollbar-width: none;
         background: rgba(255, 255, 255, 0.6);
-        padding: 15px 25px;
+        padding: 15px 22px;
         border-radius: 40px;
         box-shadow: 0 4px 15px rgba(255, 102, 153, 0.2);
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
+      }
+      #tools::-webkit-scrollbar {
+        display: none;
+      }
+      .tool-divider {
+        width: 2px;
+        height: 30px;
+        flex-shrink: 0;
+        border-radius: 2px;
+        background: rgba(255, 102, 153, 0.35);
       }
 
       .tool-btn {
@@ -91,7 +161,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         color: #fff;
       }
       .tool-btn.active {
@@ -99,7 +169,6 @@
         transform: scale(1.1);
         box-shadow: 0 0 10px #ff6699;
       }
-
       .sprinkle-bar-btn {
         background: linear-gradient(
           45deg,
@@ -109,15 +178,40 @@
           #bae1ff,
           #e0baff
         );
-        font-size: 1.4rem;
+      }
+      .sprinkle-jimmies-btn {
+        background: repeating-linear-gradient(
+          60deg,
+          #ff4d6d 0 6px,
+          #ffffff 6px 12px,
+          #ff8fab 12px 18px
+        );
       }
       .sprinkle-heart-btn {
         background-color: #ff85a1;
-        font-size: 1.4rem;
+      }
+      .sprinkle-choco-heart-btn {
+        background-color: #fffdd0;
+        color: #4a2e15;
       }
       .sprinkle-star-btn {
         background-color: #fdfd96;
-        font-size: 1.4rem;
+      }
+      .pearl-silver-btn {
+        background: radial-gradient(
+          circle at 35% 30%,
+          #ffffff,
+          #c8c8c8 45%,
+          #8a8a8a
+        );
+      }
+      .pearl-pink-btn {
+        background: radial-gradient(
+          circle at 35% 30%,
+          #ffffff,
+          #ff9ec4 45%,
+          #e0628f
+        );
       }
 
       #controls {
@@ -155,21 +249,19 @@
         transition:
           background 0.2s,
           transform 0.2s;
-        font-family: inherit;
       }
       .action-btn:active {
         transform: scale(0.95);
       }
-
       #eat-btn {
         background: #ffb7c5;
         color: #d11a2a;
         border: 2px solid #fff;
       }
 
-      /* 只有真的有滑鼠的裝置才做 hover 效果，避免手機上按鈕卡在放大狀態 */
       @media (hover: hover) {
-        .tool-btn:hover {
+        .tool-btn:hover,
+        .chip:hover {
           transform: scale(1.15);
         }
         .action-btn:hover {
@@ -221,21 +313,35 @@
           top: calc(12px + env(safe-area-inset-top));
           font-size: 1rem;
         }
+        #style-bar {
+          top: calc(44px + env(safe-area-inset-top));
+          gap: 6px;
+          max-width: calc(100% - 16px);
+        }
+        .seg {
+          padding: 5px 8px;
+          gap: 5px;
+          font-size: 0.7rem;
+        }
+        .chip {
+          width: 30px;
+          height: 30px;
+          font-size: 0.95rem;
+        }
         #ui-container {
           bottom: calc(12px + env(safe-area-inset-bottom));
           width: calc(100% - 20px);
           gap: 8px;
         }
         #tools {
-          gap: 8px;
+          gap: 9px;
           padding: 10px 14px;
-          max-width: 100%;
-          box-sizing: border-box;
+          touch-action: pan-x;
         }
         .tool-btn {
           width: 40px;
           height: 40px;
-          font-size: 1.2rem;
+          font-size: 1.15rem;
         }
         #controls {
           flex-wrap: wrap;
@@ -260,31 +366,41 @@
           font-size: 0.9rem;
         }
       }
-      @media (max-width: 360px) {
+      @media (max-width: 370px) {
+        .seg-label {
+          display: none;
+        }
         .tool-btn {
           width: 36px;
           height: 36px;
           font-size: 1rem;
-        }
-        #tools {
-          gap: 6px;
-          padding: 8px 10px;
         }
         .action-btn {
           padding: 7px 10px;
           font-size: 0.85rem;
         }
       }
-      /* 手機橫放：高度很矮，把兩排工具並排 */
+      /* 手機橫放 */
       @media (max-height: 500px) and (orientation: landscape) {
-        #ui-container {
-          flex-direction: row;
-          width: auto;
-          bottom: calc(8px + env(safe-area-inset-bottom));
-        }
         #info {
           top: 8px;
           font-size: 0.95rem;
+        }
+        #style-bar {
+          top: calc(8px + env(safe-area-inset-top));
+          left: calc(8px + env(safe-area-inset-left));
+          transform: none;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        #ui-container {
+          flex-direction: row;
+          width: auto;
+          max-width: calc(100% - 20px);
+          bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+        #tools {
+          max-width: 50vw;
         }
         #controls {
           flex-wrap: nowrap;
@@ -293,7 +409,7 @@
           width: auto;
         }
         .size-group input[type="range"] {
-          width: 90px;
+          width: 80px;
         }
       }
     </style>
@@ -309,6 +425,42 @@
   </head>
   <body>
     <div id="info">左鍵畫畫，右鍵旋轉視角 🎀</div>
+
+    <div id="style-bar">
+      <div class="seg">
+        <span class="seg-label">カタチ</span>
+        <button class="chip active" data-shape="round" title="圓形">●</button>
+        <button class="chip" data-shape="heart" title="愛心">♥</button>
+        <button class="chip" data-shape="flower" title="花朵">✿</button>
+      </div>
+      <div class="seg">
+        <span class="seg-label">ベース</span>
+        <button
+          class="chip active"
+          data-base="#3d1c04"
+          style="background: #3d1c04"
+          title="黑巧克力"
+        ></button>
+        <button
+          class="chip"
+          data-base="#7a4526"
+          style="background: #7a4526"
+          title="牛奶巧克力"
+        ></button>
+        <button
+          class="chip"
+          data-base="#f3e9cf"
+          style="background: #f3e9cf"
+          title="白巧克力"
+        ></button>
+        <button
+          class="chip"
+          data-base="#f5afc1"
+          style="background: #f5afc1"
+          title="草莓巧克力"
+        ></button>
+      </div>
+    </div>
 
     <video
       id="webcam-video"
@@ -332,7 +484,7 @@
             min="0.05"
             max="0.4"
             step="0.05"
-            value="0.2"
+            value="0.15"
           />
         </div>
         <button id="undo-btn" class="action-btn">戻る ↶</button>
@@ -346,26 +498,42 @@
           style="background-color: #4a2e15"
           data-tool="chocolate"
           data-color="#4a2e15"
-          title="黑巧克力"
+          title="黑巧克力筆"
         ></div>
         <div
           class="tool-btn"
           style="background-color: #fffdd0"
           data-tool="chocolate"
           data-color="#fffdd0"
-          title="白巧克力"
+          title="白巧克力筆"
         ></div>
         <div
           class="tool-btn"
           style="background-color: #ffb7c5"
           data-tool="chocolate"
           data-color="#ffb7c5"
-          title="草莓巧克力"
+          title="草莓巧克力筆"
+        ></div>
+        <div class="tool-divider"></div>
+        <div
+          class="tool-btn pearl-silver-btn"
+          data-tool="pearl-silver"
+          title="銀色珍珠糖"
+        ></div>
+        <div
+          class="tool-btn pearl-pink-btn"
+          data-tool="pearl-pink"
+          title="粉紅珍珠糖"
+        ></div>
+        <div
+          class="tool-btn sprinkle-jimmies-btn"
+          data-tool="sprinkle-jimmies"
+          title="粉紅系彩色糖針"
         ></div>
         <div
           class="tool-btn sprinkle-bar-btn"
           data-tool="sprinkle-bar"
-          title="彩色糖果棒"
+          title="馬卡龍色糖針"
         >
           ✧
         </div>
@@ -373,6 +541,13 @@
           class="tool-btn sprinkle-heart-btn"
           data-tool="sprinkle-heart"
           title="粉色愛心糖粒"
+        >
+          ♥
+        </div>
+        <div
+          class="tool-btn sprinkle-choco-heart-btn"
+          data-tool="sprinkle-choco-heart"
+          title="巧克力愛心"
         >
           ♥
         </div>
@@ -398,8 +573,9 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+      import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
-      // 觸控裝置（手機、平板）判斷，用來切換提示文字
       const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
       const DRAW_HINT = isTouchDevice
         ? "單指畫畫，雙指旋轉／縮放 🎀"
@@ -408,6 +584,8 @@
         ? "對著鏡頭「啊～」張大嘴巴吃掉它！😋<br><small>（或點一下巧克力）</small>"
         : "對著螢幕「啊～」張大嘴巴吃掉它！😋<br><small>（或點一下巧克力）</small>";
       const infoEl = document.getElementById("info");
+      const styleBar = document.getElementById("style-bar");
+      const uiContainer = document.getElementById("ui-container");
       infoEl.innerHTML = DRAW_HINT;
 
       const scene = new THREE.Scene();
@@ -415,20 +593,26 @@
         45,
         window.innerWidth / window.innerHeight,
         0.1,
-        100,
+        200,
       );
 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
       });
-      // 手機螢幕像素密度很高，限制在 2 倍以內避免太耗電、太卡
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       document.body.appendChild(renderer.domElement);
       const canvas = renderer.domElement;
+
+      // 讓錫箔杯與銀珠有真的金屬反光（只套在金屬材質上）
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const envTex = pmrem.fromScene(
+        new RoomEnvironment(renderer),
+        0.04,
+      ).texture;
 
       const controls = new OrbitControls(camera, canvas);
       controls.enableDamping = true;
@@ -441,7 +625,6 @@
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.ROTATE,
       };
-      // 觸控：單指留給畫畫，雙指旋轉 + 縮放
       controls.touches = {
         ONE: null,
         TWO: THREE.TOUCH.DOLLY_ROTATE,
@@ -449,24 +632,54 @@
       window.addEventListener("contextmenu", (e) => e.preventDefault());
 
       // ==========================================
-      // 📱 依螢幕比例自動調整鏡頭距離（直式手機會拉遠，巧克力才不會被切掉）
+      // 📱 鏡頭：避開上下的按鈕區，讓巧克力置中在空白處
       // ==========================================
       const DRAW_VIEW = new THREE.Vector3(0, 12, 12);
       const EAT_VIEW = new THREE.Vector3(0, 5, 15);
-      const FIT_RADIUS = 6.5; // 巧克力加錫箔杯大約的半徑，多留一點邊
+      const FIT_RADIUS = 6.3;
+      const isShortLandscape = () =>
+        window.matchMedia("(max-height: 500px) and (orientation: landscape)")
+          .matches;
+
+      function freeArea() {
+        const H = window.innerHeight;
+        let top = infoEl.getBoundingClientRect().bottom;
+        const sb = styleBar.getBoundingClientRect();
+        if (sb.height > 0 && !isShortLandscape())
+          top = Math.max(top, sb.bottom);
+        let bottom = uiContainer.getBoundingClientRect().top;
+        if (bottom - top < H * 0.35) bottom = top + H * 0.35;
+        return { top, bottom, H };
+      }
+
+      function updateViewOffset() {
+        const W = window.innerWidth;
+        const { top, bottom, H } = freeArea();
+        let off = H / 2 - (top + bottom) / 2;
+        off = THREE.MathUtils.clamp(off, -H * 0.25, H * 0.25);
+        camera.setViewOffset(W, H, 0, off, W, H);
+        camera.updateProjectionMatrix();
+      }
 
       function minFitDistance() {
+        const { top, bottom, H } = freeArea();
         const halfV = THREE.MathUtils.degToRad(camera.fov / 2);
         const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-        return FIT_RADIUS / Math.sin(Math.min(halfV, halfH));
+        const halfVFree = Math.atan(Math.tan(halfV) * ((bottom - top) / H));
+        return Math.max(
+          FIT_RADIUS / Math.sin(halfH),
+          (FIT_RADIUS * 0.75) / Math.sin(halfVFree),
+        );
       }
+
       function setView(base) {
+        updateViewOffset();
         const dist = Math.max(base.length(), minFitDistance());
         camera.position.copy(base).setLength(dist);
         controls.target.set(0, 0, 0);
+        controls.maxDistance = Math.max(60, dist * 1.5);
         controls.update();
       }
-      setView(DRAW_VIEW);
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
       scene.add(ambientLight);
@@ -484,77 +697,61 @@
       scene.add(masterGroup);
 
       // ==========================================
-      // 🌟 核心魔法：真實 3D 咬痕 Shader (著色器)
+      // 🌟 真實 3D 咬痕 Shader
       // ==========================================
-      // 預設五個咬痕的空間座標(x,y,z)與半徑(w)
       const biteUniforms = {
         biteData: {
           value: [
-            new THREE.Vector4(3.5, 0.5, 3.5, 3.5), // 右上角咬一口
-            new THREE.Vector4(-3.5, 0.5, 3.5, 3.5), // 左上角咬一口
-            new THREE.Vector4(3.5, 0.5, -3.5, 3.5), // 右下角咬一口
-            new THREE.Vector4(-3.5, 0.5, -3.5, 3.5), // 左下角咬一口
-            new THREE.Vector4(0.0, 0.0, 0.0, 8.0), // 最後一口全部吃光
+            new THREE.Vector4(3.5, 0.5, 3.5, 3.5),
+            new THREE.Vector4(-3.5, 0.5, 3.5, 3.5),
+            new THREE.Vector4(3.5, 0.5, -3.5, 3.5),
+            new THREE.Vector4(-3.5, 0.5, -3.5, 3.5),
+            new THREE.Vector4(0.0, 0.0, 0.0, 8.0),
           ],
         },
         numBites: { value: 0 },
       };
 
-      // 這個函數會對所有材質施法，讓它們遇到「咬痕」範圍時自動消失
       function patchMaterialForBites(mat) {
-        mat.side = THREE.DoubleSide; // 雙面渲染，讓咬開的地方看起來是空心巧克力殼
+        mat.side = THREE.DoubleSide;
         mat.onBeforeCompile = (shader) => {
           shader.uniforms.biteData = biteUniforms.biteData;
           shader.uniforms.numBites = biteUniforms.numBites;
-
           shader.vertexShader =
-            `
-                    varying vec3 vWorldPosBite;
-                ` + shader.vertexShader;
-
+            `varying vec3 vWorldPosBite;\n` + shader.vertexShader;
           shader.vertexShader = shader.vertexShader.replace(
             "#include <worldpos_vertex>",
-            `
-                    #include <worldpos_vertex>
-                    vWorldPosBite = (modelMatrix * vec4(transformed, 1.0)).xyz;
-                    `,
+            `#include <worldpos_vertex>
+             vWorldPosBite = (modelMatrix * vec4(transformed, 1.0)).xyz;`,
           );
-
           shader.fragmentShader =
-            `
-                    uniform vec4 biteData[5];
-                    uniform int numBites;
-                    varying vec3 vWorldPosBite;
-                ` + shader.fragmentShader;
-
-          // 如果像素在咬痕球體的半徑內，就丟棄它 (discard)
+            `uniform vec4 biteData[5];
+             uniform int numBites;
+             varying vec3 vWorldPosBite;\n` + shader.fragmentShader;
           shader.fragmentShader = shader.fragmentShader.replace(
             "void main() {",
-            `
-                    void main() {
-                        for(int i=0; i<5; i++) {
-                            if(i >= numBites) break;
-                            if(distance(vWorldPosBite, biteData[i].xyz) < biteData[i].w) {
-                                discard;
-                            }
-                        }
-                    `,
+            `void main() {
+               for(int i=0; i<5; i++) {
+                 if(i >= numBites) break;
+                 if(distance(vWorldPosBite, biteData[i].xyz) < biteData[i].w) discard;
+               }`,
           );
         };
         mat.needsUpdate = true;
       }
 
       // ==========================================
-      // 材質與模型設定
+      // 材質
       // ==========================================
       const baseMat = new THREE.MeshStandardMaterial({
         color: "#3d1c04",
         roughness: 0.4,
       });
       const foilMat = new THREE.MeshStandardMaterial({
-        color: "#e8e8e8",
-        metalness: 0.9,
-        roughness: 0.4,
+        color: "#dedede",
+        metalness: 1.0,
+        roughness: 0.3,
+        envMap: envTex,
       });
       const frostingMaterials = {
         "#4a2e15": new THREE.MeshPhongMaterial({
@@ -583,62 +780,197 @@
         shininess: 10,
         specular: 0xaaaaaa,
       });
-      const barSprinkleColors = [
+      const chocoHeartMat = new THREE.MeshPhongMaterial({
+        color: "#4a2e15",
+        shininess: 25,
+        specular: 0x333333,
+      });
+      const silverPearlMat = new THREE.MeshStandardMaterial({
+        color: "#f2f2f2",
+        metalness: 1.0,
+        roughness: 0.12,
+        envMap: envTex,
+      });
+      const pinkPearlMat = new THREE.MeshPhongMaterial({
+        color: "#ff9ec4",
+        shininess: 90,
+        specular: 0xffffff,
+      });
+      const makeMats = (colors) =>
+        colors.map(
+          (c) =>
+            new THREE.MeshPhongMaterial({
+              color: c,
+              shininess: 10,
+              specular: 0xaaaaaa,
+            }),
+        );
+      const barSprinkleMats = makeMats([
         "#ffb3ba",
         "#ffdfba",
         "#baffc9",
         "#bae1ff",
         "#e0baff",
         "#ffffff",
-      ];
-      const barSprinkleMats = barSprinkleColors.map(
-        (c) =>
-          new THREE.MeshPhongMaterial({
-            color: c,
-            shininess: 10,
-            specular: 0xaaaaaa,
-          }),
-      );
+      ]);
+      const jimmyMats = makeMats([
+        "#ff4d6d",
+        "#ff8fab",
+        "#ffffff",
+        "#c9184a",
+        "#ffc2d1",
+      ]);
 
-      // 🌟 將所有的材質套上咬痕魔法
-      const allMats = [
+      [
         baseMat,
         foilMat,
         starMat,
         heartMat,
+        chocoHeartMat,
+        silverPearlMat,
+        pinkPearlMat,
         ...barSprinkleMats,
+        ...jimmyMats,
         ...Object.values(frostingMaterials),
-      ];
-      allMats.forEach(patchMaterialForBites);
+      ].forEach(patchMaterialForBites);
 
-      // 建置基底與紙杯
-      const baseGeo = new THREE.CylinderGeometry(4.8, 4.8, 1.5, 64);
-      const baseChocolate = new THREE.Mesh(baseGeo, baseMat);
+      // ==========================================
+      // 🍫 巧克力形狀：圓形 / 愛心 / 花朵
+      // ==========================================
+      const OUTLINE_SAMPLES = 240;
+
+      function outlinePoints(kind) {
+        const pts = [];
+        for (let i = 0; i < OUTLINE_SAMPLES; i++) {
+          const t = (i / OUTLINE_SAMPLES) * Math.PI * 2;
+          let x, y;
+          if (kind === "heart") {
+            const s = 0.31;
+            x = 16 * Math.pow(Math.sin(t), 3) * s;
+            y =
+              (13 * Math.cos(t) -
+                5 * Math.cos(2 * t) -
+                2 * Math.cos(3 * t) -
+                Math.cos(4 * t) +
+                2.5) *
+              s;
+          } else if (kind === "flower") {
+            const r = 4.3 + 0.4 * Math.cos(6 * t);
+            x = r * Math.cos(t);
+            y = r * Math.sin(t);
+          } else {
+            x = 4.68 * Math.cos(t);
+            y = 4.68 * Math.sin(t);
+          }
+          pts.push(new THREE.Vector2(x, y));
+        }
+        if (THREE.ShapeUtils.isClockWise(pts)) pts.reverse();
+        return pts;
+      }
+
+      // 每個點往外的方向（平滑過，愛心的凹口才不會打結）
+      function outlineNormals(outline) {
+        const N = outline.length;
+        const raw = outline.map((p, i) => {
+          const a = outline[(i - 1 + N) % N];
+          const b = outline[(i + 1) % N];
+          return new THREE.Vector2(b.y - a.y, -(b.x - a.x)).normalize();
+        });
+        return raw.map((_, i) => {
+          const s = new THREE.Vector2();
+          for (let k = -6; k <= 6; k++) s.add(raw[(i + k + N) % N]);
+          return s.normalize();
+        });
+      }
+
+      function buildBaseGeometry(outline) {
+        const shape = new THREE.Shape(outline);
+        let g = new THREE.ExtrudeGeometry(shape, {
+          depth: 1.2,
+          bevelEnabled: true,
+          bevelThickness: 0.15,
+          bevelSize: 0.12,
+          bevelSegments: 4,
+          curveSegments: 1,
+        });
+        g.rotateX(-Math.PI / 2);
+        g.translate(0, -0.6, 0); // 頂面在 y = 0.75
+        g.deleteAttribute("uv");
+        g.deleteAttribute("normal");
+        g = mergeVertices(g, 1e-4);
+        g.computeVertexNormals();
+        return g;
+      }
+
+      // 依照輪廓做出有皺褶的錫箔杯
+      function buildCupGeometry(outline) {
+        const N = outline.length;
+        const normals = outlineNormals(outline);
+        const arc = [0];
+        let perimeter = 0;
+        for (let i = 1; i <= N; i++) {
+          perimeter += outline[i % N].distanceTo(outline[i - 1]);
+          arc.push(perimeter);
+        }
+        const pleats = Math.round(perimeter / 0.65);
+        const ROWS = 5;
+        const positions = [];
+        for (let r = 0; r <= ROWS; r++) {
+          const h = r / ROWS;
+          const y = -0.85 + 1.7 * h;
+          const offset = 0.17 + 0.65 * h; // 底部貼著巧克力，上緣往外翻
+          for (let i = 0; i < N; i++) {
+            const phase = (arc[i] / perimeter) * pleats * Math.PI * 2;
+            const crinkle = Math.sin(phase) * 0.15 * (0.1 + 0.9 * h);
+            const d = offset + crinkle;
+            const p = outline[i];
+            const n = normals[i];
+            positions.push(p.x + n.x * d, y, -(p.y + n.y * d));
+          }
+        }
+        const index = [];
+        for (let r = 0; r < ROWS; r++) {
+          for (let i = 0; i < N; i++) {
+            const a = r * N + i;
+            const b = r * N + ((i + 1) % N);
+            const c = (r + 1) * N + i;
+            const d = (r + 1) * N + ((i + 1) % N);
+            index.push(a, b, d, a, d, c);
+          }
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(positions, 3),
+        );
+        g.setIndex(index);
+        g.computeVertexNormals();
+        return g;
+      }
+
+      function buildCupBottom(outline) {
+        const normals = outlineNormals(outline);
+        const pts = outline.map(
+          (p, i) =>
+            new THREE.Vector2(
+              p.x + normals[i].x * 0.17,
+              p.y + normals[i].y * 0.17,
+            ),
+        );
+        const g = new THREE.ShapeGeometry(new THREE.Shape(pts));
+        g.rotateX(-Math.PI / 2);
+        g.translate(0, -0.85, 0);
+        return g;
+      }
+
+      const baseChocolate = new THREE.Mesh(new THREE.BufferGeometry(), baseMat);
       baseChocolate.receiveShadow = true;
       baseChocolate.castShadow = true;
       masterGroup.add(baseChocolate);
 
       const foilGroup = new THREE.Group();
-      const cupGeo = new THREE.CylinderGeometry(5.5, 4.85, 1.7, 128, 1, true);
-      const pos = cupGeo.attributes.position;
-      const v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        const angle = Math.atan2(v.z, v.x);
-        const crinkle = Math.sin(angle * 45) * 0.15;
-        const crinkleIntensity = 0.1 + 0.9 * ((v.y + 0.85) / 1.7);
-        const radius = Math.sqrt(v.x * v.x + v.z * v.z);
-        const factor = 1 + (crinkle / radius) * crinkleIntensity;
-        v.x *= factor;
-        v.z *= factor;
-        pos.setXYZ(i, v.x, v.y, v.z);
-      }
-      cupGeo.computeVertexNormals();
-      const bottomGeo = new THREE.CircleGeometry(4.85, 128);
-      bottomGeo.rotateX(-Math.PI / 2);
-      bottomGeo.translate(0, -0.85, 0);
-      const cupMesh = new THREE.Mesh(cupGeo, foilMat);
-      const bottomMesh = new THREE.Mesh(bottomGeo, foilMat);
+      const cupMesh = new THREE.Mesh(new THREE.BufferGeometry(), foilMat);
+      const bottomMesh = new THREE.Mesh(new THREE.BufferGeometry(), foilMat);
       cupMesh.castShadow = true;
       cupMesh.receiveShadow = true;
       bottomMesh.receiveShadow = true;
@@ -646,6 +978,17 @@
       foilGroup.add(bottomMesh);
       foilGroup.position.y = 0.09;
       masterGroup.add(foilGroup);
+
+      function buildBase(kind) {
+        const outline = outlinePoints(kind);
+        baseChocolate.geometry.dispose();
+        cupMesh.geometry.dispose();
+        bottomMesh.geometry.dispose();
+        baseChocolate.geometry = buildBaseGeometry(outline);
+        cupMesh.geometry = buildCupGeometry(outline);
+        bottomMesh.geometry = buildCupBottom(outline);
+      }
+      buildBase("round");
 
       const chocolateGroup = new THREE.Group();
       masterGroup.add(chocolateGroup);
@@ -655,6 +998,9 @@
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
 
+      // ==========================================
+      // 裝飾糖的形狀
+      // ==========================================
       const sprinkleExtrudeSettings = {
         depth: 0.04,
         bevelEnabled: true,
@@ -662,7 +1008,13 @@
         bevelSize: 0.01,
         bevelSegments: 3,
       };
-
+      function centerGeo(geo) {
+        geo.computeBoundingBox();
+        const c = new THREE.Vector3();
+        geo.boundingBox.getCenter(c);
+        geo.translate(-c.x, -c.y, -c.z);
+        return geo;
+      }
       function createStarGeometry() {
         const shape = new THREE.Shape();
         for (let i = 0; i < 10; i++) {
@@ -673,17 +1025,11 @@
           else shape.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
         }
         shape.closePath();
-        const geo = new THREE.ExtrudeGeometry(shape, sprinkleExtrudeSettings);
-        geo.computeBoundingBox();
-        const center = new THREE.Vector3();
-        geo.boundingBox.getCenter(center);
-        geo.translate(-center.x, -center.y, -center.z);
-        return geo;
+        return centerGeo(
+          new THREE.ExtrudeGeometry(shape, sprinkleExtrudeSettings),
+        );
       }
-      const starGeo = createStarGeometry();
-
       function createHeartGeometry() {
-        const heartShape = new THREE.Shape();
         const pts = [];
         for (let i = 0; i < 64; i++) {
           const t = (i / 64) * Math.PI * 2;
@@ -695,111 +1041,168 @@
             Math.cos(4 * t);
           pts.push(new THREE.Vector2(x / 40, y / 40));
         }
-        heartShape.setFromPoints(pts);
         const geo = new THREE.ExtrudeGeometry(
-          heartShape,
+          new THREE.Shape(pts),
           sprinkleExtrudeSettings,
         );
         geo.scale(1.05, 1.05, 1);
-        geo.computeBoundingBox();
-        const center = new THREE.Vector3();
-        geo.boundingBox.getCenter(center);
-        geo.translate(-center.x, -center.y, -center.z);
-        return geo;
+        return centerGeo(geo);
       }
+      const starGeo = createStarGeometry();
       const heartGeo = createHeartGeometry();
       const barGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 8);
+      const pearlGeo = new THREE.SphereGeometry(0.13, 16, 12);
+
+      // 每種裝飾的撒法
+      const SPRINKLES = {
+        "sprinkle-bar": {
+          geo: barGeo,
+          mats: barSprinkleMats,
+          count: [2, 4],
+          spread: 0.6,
+          safe: 0.15,
+          lift: 0.08,
+          lying: true,
+          drag: [0.04, 0.1],
+        },
+        "sprinkle-jimmies": {
+          geo: barGeo,
+          mats: jimmyMats,
+          count: [2, 4],
+          spread: 0.6,
+          safe: 0.15,
+          lift: 0.08,
+          lying: true,
+          drag: [0.04, 0.1],
+        },
+        "sprinkle-heart": {
+          geo: heartGeo,
+          mats: [heartMat],
+          count: [1, 1],
+          spread: 0.3,
+          safe: 0.4,
+          lift: 0.03,
+          drag: [0.15, 0.6],
+        },
+        "sprinkle-choco-heart": {
+          geo: heartGeo,
+          mats: [chocoHeartMat],
+          count: [1, 1],
+          spread: 0.2,
+          safe: 0.5,
+          lift: 0.03,
+          scale: [1.3, 1.3],
+          drag: [0.2, 0.6],
+        },
+        "sprinkle-star": {
+          geo: starGeo,
+          mats: [starMat],
+          count: [1, 1],
+          spread: 0.3,
+          safe: 0.4,
+          lift: 0.03,
+          drag: [0.15, 0.6],
+        },
+        "pearl-silver": {
+          geo: pearlGeo,
+          mats: [silverPearlMat],
+          count: [1, 1],
+          spread: 0.15,
+          safe: 0.27,
+          lift: 0.1,
+          scale: [0.8, 1.25],
+          drag: [0.12, 0.4],
+        },
+        "pearl-pink": {
+          geo: pearlGeo,
+          mats: [pinkPearlMat],
+          count: [1, 1],
+          spread: 0.15,
+          safe: 0.27,
+          lift: 0.1,
+          scale: [0.8, 1.25],
+          drag: [0.12, 0.4],
+        },
+      };
 
       let isDrawing = false;
       let currentTool = "chocolate";
       let currentColor = "#4a2e15";
       let currentPoints = [];
       let currentLineMesh = null;
+      let smoothPoint = null;
+      let strokeLayer = 0;
       let TUBE_RADIUS = parseFloat(
         document.getElementById("size-slider").value,
       );
-      const MIN_DISTANCE_CHOCOLATE = 0.08;
 
-      let capGeo = new THREE.SphereGeometry(TUBE_RADIUS, 16, 16);
-      let currentStartCap = null;
+      let capGeo = new THREE.SphereGeometry(TUBE_RADIUS, 20, 16);
       let currentEndCap = null;
       let actionHistory = [];
       let currentActionMeshes = [];
 
-      // 狀態變數
       let isEatMode = false;
       let bitesTaken = 0;
       let isMouthCurrentlyOpen = false;
 
       document.getElementById("size-slider").addEventListener("input", (e) => {
         TUBE_RADIUS = parseFloat(e.target.value);
-        capGeo.dispose();
-        capGeo = new THREE.SphereGeometry(TUBE_RADIUS, 16, 16);
+        capGeo = new THREE.SphereGeometry(TUBE_RADIUS, 20, 16);
       });
 
-      function getIntersectData(event) {
-        if (isEatMode) return null; // 咬咬模式禁止畫畫
+      // 巧克力筆只貼著巧克力表面畫（不會爬到別的線上面，重疊時才會平順）
+      // 糖粒則可以落在畫好的線上
+      function getIntersectData(event, includeStrokes) {
+        if (isEatMode) return null;
         const rect = canvas.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const targets = [baseChocolate, ...chocolateGroup.children];
+        const targets = includeStrokes
+          ? [baseChocolate, ...chocolateGroup.children]
+          : [baseChocolate];
         const intersects = raycaster.intersectObjects(targets, false);
-        if (intersects.length > 0) {
-          const validHit = intersects.find(
-            (hit) => !currentActionMeshes.includes(hit.object),
-          );
-          if (validHit)
-            return { point: validHit.point, normal: validHit.face.normal };
-        }
+        const validHit = intersects.find(
+          (hit) => !currentActionMeshes.includes(hit.object),
+        );
+        if (validHit)
+          return { point: validHit.point, normal: validHit.face.normal };
         return null;
       }
 
       function scatterSprinkles(hitData) {
-        const isBar = currentTool === "sprinkle-bar";
-        const count = isBar ? Math.floor(Math.random() * 3) + 2 : 1;
-        const spread = isBar ? 0.6 : 0.3;
-        const safeDistance = isBar ? 0.15 : 0.4;
+        const cfg = SPRINKLES[currentTool];
+        if (!cfg) return;
+        const count =
+          cfg.count[0] +
+          Math.floor(Math.random() * (cfg.count[1] - cfg.count[0] + 1));
 
         for (let i = 0; i < count; i++) {
-          let proposedPos = hitData.point.clone();
-          proposedPos.x += (Math.random() - 0.5) * spread;
-          proposedPos.z += (Math.random() - 0.5) * spread;
-          let pushThickness = isBar ? 0.08 : (0.04 + 0.01 * 2) / 2;
+          const s = cfg.scale
+            ? THREE.MathUtils.lerp(cfg.scale[0], cfg.scale[1], Math.random())
+            : 1;
+          const proposedPos = hitData.point.clone();
+          proposedPos.x += (Math.random() - 0.5) * cfg.spread;
+          proposedPos.z += (Math.random() - 0.5) * cfg.spread;
           proposedPos.add(
-            hitData.normal.clone().multiplyScalar(pushThickness * 0.95),
+            hitData.normal.clone().multiplyScalar(cfg.lift * s * 0.95),
           );
 
           let isOverlapping = false;
-          for (let j = 0; j < sprinkleGroup.children.length; j++) {
-            if (
-              sprinkleGroup.children[j].position.distanceTo(proposedPos) <
-              safeDistance
-            ) {
+          for (const other of sprinkleGroup.children) {
+            if (other.position.distanceTo(proposedPos) < cfg.safe * s) {
               isOverlapping = true;
               break;
             }
           }
           if (isOverlapping) continue;
 
-          let sprinkle;
-          if (isBar)
-            sprinkle = new THREE.Mesh(
-              barGeo,
-              barSprinkleMats[
-                Math.floor(Math.random() * barSprinkleMats.length)
-              ],
-            );
-          else if (currentTool === "sprinkle-heart")
-            sprinkle = new THREE.Mesh(heartGeo, heartMat);
-          else if (currentTool === "sprinkle-star")
-            sprinkle = new THREE.Mesh(starGeo, starMat);
-
-          if (!sprinkle) return;
-
+          const mat = cfg.mats[Math.floor(Math.random() * cfg.mats.length)];
+          const sprinkle = new THREE.Mesh(cfg.geo, mat);
+          sprinkle.scale.setScalar(s);
           sprinkle.position.copy(proposedPos);
           sprinkle.lookAt(sprinkle.position.clone().add(hitData.normal));
-          if (isBar) sprinkle.rotateX(Math.PI / 2);
+          if (cfg.lying) sprinkle.rotateX(Math.PI / 2);
           sprinkle.rotateZ(Math.random() * Math.PI * 2);
           sprinkle.castShadow = true;
           sprinkle.receiveShadow = false;
@@ -808,116 +1211,98 @@
         }
       }
 
+      function strokePoint(hitData) {
+        // 每一筆比上一筆高一點點，交叉時新的線會乾淨地疊在上面
+        const lift = Math.min(strokeLayer * 0.004, 0.2);
+        return hitData.point
+          .clone()
+          .add(hitData.normal.clone().multiplyScalar(TUBE_RADIUS * 0.7 + lift));
+      }
+
+      function makeCap(pos) {
+        const cap = new THREE.Mesh(capGeo, frostingMaterials[currentColor]);
+        cap.position.copy(pos);
+        cap.castShadow = true;
+        chocolateGroup.add(cap);
+        currentActionMeshes.push(cap);
+        return cap;
+      }
+
+      function rebuildTube() {
+        const curve = new THREE.CatmullRomCurve3(
+          currentPoints,
+          false,
+          "centripetal",
+          0.5,
+        );
+        const segs = Math.min(1200, Math.max(24, currentPoints.length * 5));
+        const g = new THREE.TubeGeometry(curve, segs, TUBE_RADIUS, 16, false);
+        currentLineMesh.geometry.dispose();
+        currentLineMesh.geometry = g;
+      }
+
       function startDrawing(event) {
         if (isEatMode) return;
-        const hitData = getIntersectData(event);
-        if (hitData) {
-          isDrawing = true;
-          currentActionMeshes = [];
-          if (currentTool.startsWith("sprinkle")) {
-            currentPoints = [hitData.point.clone()];
-            scatterSprinkles(hitData);
-            return;
-          }
-          const point = hitData.point.clone();
-          point.add(hitData.normal.clone().multiplyScalar(TUBE_RADIUS * 0.8));
-          const offsetPoint = point
-            .clone()
-            .add(new THREE.Vector3(0.005, 0, 0.005));
-          currentPoints = [point, offsetPoint];
-          const curve = new THREE.CatmullRomCurve3(
-            currentPoints,
-            false,
-            "centripetal",
-            0.5,
-          );
-          const geometry = new THREE.TubeGeometry(
-            curve,
-            16,
-            TUBE_RADIUS,
-            12,
-            false,
-          );
-          currentLineMesh = new THREE.Mesh(
-            geometry,
-            frostingMaterials[currentColor],
-          );
-          currentLineMesh.castShadow = true;
-          currentLineMesh.receiveShadow = false;
-          chocolateGroup.add(currentLineMesh);
-          currentActionMeshes.push(currentLineMesh);
-          currentStartCap = new THREE.Mesh(
-            capGeo,
-            frostingMaterials[currentColor],
-          );
-          currentStartCap.position.copy(point);
-          currentStartCap.castShadow = true;
-          currentStartCap.receiveShadow = false;
-          chocolateGroup.add(currentStartCap);
-          currentActionMeshes.push(currentStartCap);
-          currentEndCap = new THREE.Mesh(
-            capGeo,
-            frostingMaterials[currentColor],
-          );
-          currentEndCap.position.copy(offsetPoint);
-          currentEndCap.castShadow = true;
-          currentEndCap.receiveShadow = false;
-          chocolateGroup.add(currentEndCap);
-          currentActionMeshes.push(currentEndCap);
+        const isSprinkle = currentTool !== "chocolate";
+        const hitData = getIntersectData(event, isSprinkle);
+        if (!hitData) return;
+        isDrawing = true;
+        currentActionMeshes = [];
+
+        if (isSprinkle) {
+          currentPoints = [hitData.point.clone()];
+          scatterSprinkles(hitData);
+          return;
         }
+
+        strokeLayer++;
+        const point = strokePoint(hitData);
+        smoothPoint = point.clone();
+        currentPoints = [
+          point,
+          point.clone().add(new THREE.Vector3(0.005, 0, 0.005)),
+        ];
+        currentLineMesh = new THREE.Mesh(
+          new THREE.BufferGeometry(),
+          frostingMaterials[currentColor],
+        );
+        currentLineMesh.castShadow = true;
+        chocolateGroup.add(currentLineMesh);
+        currentActionMeshes.push(currentLineMesh);
+        rebuildTube();
+        makeCap(currentPoints[0]);
+        currentEndCap = makeCap(currentPoints[1]);
       }
 
       function draw(event) {
         if (!isDrawing || isEatMode) return;
         if (event.pointerType === "mouse" && (event.buttons & 1) === 0) return;
-        const hitData = getIntersectData(event);
-        if (hitData) {
-          const point = hitData.point.clone();
-          point.add(hitData.normal.clone().multiplyScalar(TUBE_RADIUS * 0.8));
+        const isSprinkle = currentTool !== "chocolate";
+        const hitData = getIntersectData(event, isSprinkle);
+        if (!hitData) return;
+
+        if (isSprinkle) {
+          const cfg = SPRINKLES[currentTool];
           const lastPoint = currentPoints[currentPoints.length - 1];
-          if (currentTool.startsWith("sprinkle")) {
-            const isBar = currentTool === "sprinkle-bar";
-            const distReq = isBar ? 0.04 : 0.15,
-              probReq = isBar ? 0.1 : 0.6;
-            if (
-              lastPoint.distanceTo(point) > distReq &&
-              Math.random() > probReq
-            ) {
-              currentPoints.push(point);
-              scatterSprinkles(hitData);
-            }
-            return;
+          if (
+            lastPoint.distanceTo(hitData.point) > cfg.drag[0] &&
+            Math.random() > cfg.drag[1]
+          ) {
+            currentPoints.push(hitData.point.clone());
+            scatterSprinkles(hitData);
           }
-          if (!currentLineMesh) return;
-          if (lastPoint.distanceTo(point) > MIN_DISTANCE_CHOCOLATE) {
-            currentPoints.push(point);
-            const jointCap = new THREE.Mesh(
-              capGeo,
-              frostingMaterials[currentColor],
-            );
-            jointCap.position.copy(point);
-            jointCap.castShadow = true;
-            jointCap.receiveShadow = false;
-            chocolateGroup.add(jointCap);
-            currentActionMeshes.push(jointCap);
-            const curve = new THREE.CatmullRomCurve3(
-              currentPoints,
-              false,
-              "centripetal",
-              0.5,
-            );
-            const tubularSegments = Math.max(24, currentPoints.length * 6);
-            const newGeometry = new THREE.TubeGeometry(
-              curve,
-              tubularSegments,
-              TUBE_RADIUS,
-              12,
-              false,
-            );
-            currentLineMesh.geometry.dispose();
-            currentLineMesh.geometry = newGeometry;
-            if (currentEndCap) currentEndCap.position.copy(point);
-          }
+          return;
+        }
+
+        if (!currentLineMesh) return;
+        // 手指抖動平滑化
+        smoothPoint.lerp(strokePoint(hitData), 0.5);
+        const lastPoint = currentPoints[currentPoints.length - 1];
+        const minDist = Math.max(0.08, TUBE_RADIUS * 0.5);
+        if (lastPoint.distanceTo(smoothPoint) > minDist) {
+          currentPoints.push(smoothPoint.clone());
+          rebuildTube();
+          currentEndCap.position.copy(smoothPoint);
         }
       }
 
@@ -925,8 +1310,8 @@
         isDrawing = false;
         currentLineMesh = null;
         currentPoints = [];
-        currentStartCap = null;
         currentEndCap = null;
+        smoothPoint = null;
         currentActionMeshes = [];
       }
 
@@ -936,7 +1321,6 @@
         resetStrokeState();
       }
 
-      // 第二根手指放上來 = 想旋轉視角，把剛剛不小心畫出的那一筆收回
       function cancelStroke() {
         if (!isDrawing) return;
         if (currentLineMesh) currentLineMesh.geometry.dispose();
@@ -947,20 +1331,17 @@
       }
 
       // ==========================================
-      // 📱 統一用 Pointer Events 處理滑鼠與觸控
+      // Pointer Events（滑鼠 + 觸控）
       // ==========================================
       const activePointers = new Set();
       let drawingPointerId = null;
 
       canvas.addEventListener("pointerdown", (e) => {
         activePointers.add(e.pointerId);
-
         if (isEatMode) {
-          // 吃吃模式：點一下也能咬（沒有鏡頭權限時的備案）
           if (activePointers.size === 1 && e.button === 0) takeABite();
           return;
         }
-
         if (activePointers.size > 1) {
           cancelStroke();
           drawingPointerId = null;
@@ -973,7 +1354,6 @@
 
       canvas.addEventListener("pointermove", (e) => {
         if (e.pointerId !== drawingPointerId) return;
-        // 高頻率觸控裝置會把多個點合併，逐一處理讓線條更順
         const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
         if (events.length > 1) events.forEach((ce) => draw(ce));
         else draw(e);
@@ -989,16 +1369,31 @@
       window.addEventListener("pointerup", endPointer);
       window.addEventListener("pointercancel", endPointer);
 
-      const buttons = document.querySelectorAll(".tool-btn");
-      buttons.forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          buttons.forEach((b) => b.classList.remove("active"));
-          const target = e.target.closest(".tool-btn");
-          target.classList.add("active");
-          currentTool = target.dataset.tool;
-          if (currentTool === "chocolate") currentColor = target.dataset.color;
+      // ==========================================
+      // 按鈕
+      // ==========================================
+      const toolButtons = document.querySelectorAll(".tool-btn");
+      toolButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          toolButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentTool = btn.dataset.tool;
+          if (currentTool === "chocolate") currentColor = btn.dataset.color;
         });
       });
+
+      function bindChips(selector, onPick) {
+        const chips = document.querySelectorAll(selector);
+        chips.forEach((chip) =>
+          chip.addEventListener("click", () => {
+            chips.forEach((c) => c.classList.remove("active"));
+            chip.classList.add("active");
+            onPick(chip);
+          }),
+        );
+      }
+      bindChips("[data-shape]", (chip) => buildBase(chip.dataset.shape));
+      bindChips("[data-base]", (chip) => baseMat.color.set(chip.dataset.base));
 
       document.getElementById("undo-btn").addEventListener("click", () => {
         if (actionHistory.length === 0) return;
@@ -1020,7 +1415,7 @@
           }
         });
         actionHistory = [];
-        // 🌟 重置咬痕與狀態
+        strokeLayer = 0;
         bitesTaken = 0;
         biteUniforms.numBites.value = 0;
         masterGroup.visible = true;
@@ -1028,7 +1423,6 @@
         masterGroup.rotation.set(0, 0, 0);
         document.getElementById("oishii-msg").style.display = "none";
         infoEl.innerHTML = isEatMode ? EAT_HINT : DRAW_HINT;
-        // 恢復陰影
         masterGroup.traverse((child) => {
           if (child.isMesh) child.castShadow = true;
         });
@@ -1036,9 +1430,8 @@
 
       window.addEventListener("resize", () => {
         camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // 轉向或視窗變窄時，確保巧克力還完整在畫面內
+        updateViewOffset();
         const need = Math.max(minFitDistance(), controls.minDistance);
         const offset = camera.position.clone().sub(controls.target);
         if (offset.length() < need) {
@@ -1047,10 +1440,12 @@
         }
         controls.maxDistance = Math.max(60, need * 1.5);
       });
-      window.dispatchEvent(new Event("resize"));
+
+      camera.aspect = window.innerWidth / window.innerHeight;
+      setView(DRAW_VIEW);
 
       // ==========================================
-      // 🌟 隱藏攝影機與張嘴吃掉特效邏輯
+      // 攝影機與張嘴吃掉
       // ==========================================
       const videoElement = document.getElementById("webcam-video");
       const eatBtn = document.getElementById("eat-btn");
@@ -1076,14 +1471,13 @@
             minTrackingConfidence: 0.5,
           });
           faceMesh.onResults(onFaceResults);
-
           const cam = new Camera(videoElement, {
             onFrame: async () => {
               if (isEatMode) await faceMesh.send({ image: videoElement });
             },
             width: 320,
             height: 240,
-            facingMode: "user", // 手機用前鏡頭
+            facingMode: "user",
           });
           cam.start().catch(() => {
             infoEl.innerHTML =
@@ -1098,23 +1492,14 @@
       function takeABite() {
         if (bitesTaken >= 5) return;
         bitesTaken++;
-
-        // 手機上給一點震動回饋（有支援的裝置才會震）
         if (navigator.vibrate) navigator.vibrate(40);
-
-        // 🌟 觸發 Shader 的咬痕效果！
         biteUniforms.numBites.value = bitesTaken;
-
-        // 讓巧克力震動一下，並稍微往下沉，模擬被咬的力量
         masterGroup.position.y -= 0.1;
         masterGroup.rotation.y += (Math.random() - 0.5) * 0.4;
         masterGroup.rotation.z += (Math.random() - 0.5) * 0.2;
-
-        // 關閉陰影，避免咬掉的地方殘留奇怪的空氣陰影
         masterGroup.traverse((child) => {
           if (child.isMesh) child.castShadow = false;
         });
-
         if (bitesTaken >= 5) {
           masterGroup.visible = false;
           document.getElementById("oishii-msg").style.display = "block";
@@ -1128,23 +1513,13 @@
           results.multiFaceLandmarks &&
           results.multiFaceLandmarks.length > 0
         ) {
-          const landmarks = results.multiFaceLandmarks[0];
-          const topLip = landmarks[13];
-          const bottomLip = landmarks[14];
-          const forehead = landmarks[10];
-          const chin = landmarks[152];
-
-          // 嘴巴張開的程度，用臉的高度來換算比例
-          // 這樣手機拿近拿遠都一樣好判斷
-          const faceHeight = Math.abs(chin.y - forehead.y) || 1;
-          const mouthRatio = Math.abs(topLip.y - bottomLip.y) / faceHeight;
-          const OPEN = 0.1;
-          const CLOSE = 0.07;
-
-          if (mouthRatio > OPEN && !isMouthCurrentlyOpen) {
+          const lm = results.multiFaceLandmarks[0];
+          const faceHeight = Math.abs(lm[152].y - lm[10].y) || 1;
+          const mouthRatio = Math.abs(lm[13].y - lm[14].y) / faceHeight;
+          if (mouthRatio > 0.1 && !isMouthCurrentlyOpen) {
             isMouthCurrentlyOpen = true;
             takeABite();
-          } else if (mouthRatio < CLOSE) {
+          } else if (mouthRatio < 0.07) {
             isMouthCurrentlyOpen = false;
           }
         }
@@ -1153,6 +1528,7 @@
       eatBtn.addEventListener("click", () => {
         isEatMode = !isEatMode;
         cancelStroke();
+        document.body.classList.toggle("eat-mode", isEatMode);
         if (isEatMode) {
           infoEl.innerHTML = EAT_HINT;
           eatBtn.innerHTML = "畫畫モード 🖌️";
