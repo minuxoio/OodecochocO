@@ -431,7 +431,13 @@
         <span class="seg-label">カタチ</span>
         <button class="chip active" data-shape="round" title="圓形">●</button>
         <button class="chip" data-shape="heart" title="愛心">♥</button>
-        <button class="chip" data-shape="flower" title="花朵">✿</button>
+        <button
+          class="chip"
+          data-shape="animal"
+          title="動物頭（貓貓／熊熊／兔兔隨機）"
+        >
+          🐾
+        </button>
       </div>
       <div class="seg">
         <span class="seg-label">ベース</span>
@@ -575,6 +581,7 @@
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
       import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+      import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
 
       const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
       const DRAW_HINT = isTouchDevice
@@ -702,10 +709,10 @@
       const biteUniforms = {
         biteData: {
           value: [
-            new THREE.Vector4(3.5, 0.5, 3.5, 3.5),
-            new THREE.Vector4(-3.5, 0.5, 3.5, 3.5),
-            new THREE.Vector4(3.5, 0.5, -3.5, 3.5),
-            new THREE.Vector4(-3.5, 0.5, -3.5, 3.5),
+            new THREE.Vector4(3.5, 1.0, 3.5, 3.5),
+            new THREE.Vector4(-3.5, 1.0, 3.5, 3.5),
+            new THREE.Vector4(3.5, 1.0, -3.5, 3.5),
+            new THREE.Vector4(-3.5, 1.0, -3.5, 3.5),
             new THREE.Vector4(0.0, 0.0, 0.0, 8.0),
           ],
         },
@@ -752,6 +759,7 @@
         metalness: 1.0,
         roughness: 0.3,
         envMap: envTex,
+        side: THREE.DoubleSide, // 錫箔杯不套咬痕：吃完會留下空杯子
       });
       const frostingMaterials = {
         "#4a2e15": new THREE.MeshPhongMaterial({
@@ -823,7 +831,6 @@
 
       [
         baseMat,
-        foilMat,
         starMat,
         heartMat,
         chocoHeartMat,
@@ -835,58 +842,192 @@
       ].forEach(patchMaterialForBites);
 
       // ==========================================
-      // 🍫 巧克力形狀：圓形 / 愛心 / 花朵
+      // 🍫 巧克力形狀：圓形 / 愛心 / 動物（輪廓來自 SVG 檔）
       // ==========================================
-      const OUTLINE_SAMPLES = 240;
+      const SVG_SHAPES = {
+        heart: {
+          viewBox: "0 0 554.05 476.73",
+          d: "M277.03,57.33C113.02-105.56-105.97,113.97,58.03,276.86l188.64,187.36c16.79,16.68,43.9,16.68,60.7,0l188.64-187.36c164-162.89-54.99-382.42-218.99-219.53Z",
+        },
+        cat: {
+          viewBox: "0 0 570.53 476.73",
+          d: "M285.15,476.69h-1.97C127.21,478.7-22.53,400.48,2.82,249.28c9.99-59.55,28.57-83.07,42.33-108.02v-.02s0,.02,0,.02v-.02C48.28,107.87,59.59,18.96,86.04,1.8c16.81-10.91,99.51,30.28,118.99,52.08,24.49-7.24,48.41-11.33,80.23-11.46,31.82.13,55.74,4.22,80.23,11.46,19.48-21.8,102.18-62.99,118.99-52.08,26.45,17.16,37.76,106.06,40.89,139.45v.02s0-.02,0-.02v.02c13.76,24.95,32.35,48.47,42.33,108.02,25.35,151.19-124.39,229.42-280.35,227.41h-1.97",
+        },
+        bear: {
+          viewBox: "0 0 586.72 413.68",
+          d: "M519.81,166.64c4.82,11.7,8.75,24.48,11.63,38.44,33.44,162.8-103.52,205.59-238.08,208.59-134.56-3-271.5-45.79-238.08-208.59,2.87-13.96,6.81-26.74,11.63-38.44C28.71,158.65,0,124.79,0,84.21,0,37.7,37.72,0,84.23,0c40.3,0,73.98,28.3,82.26,66.11,62.53-28.48,126.86-25.28,126.86-25.28,0,0,64.35-3.21,126.88,25.28C428.53,28.3,462.21,0,502.51,0c46.51,0,84.21,37.7,84.21,84.21,0,40.58-28.71,74.46-66.91,82.43Z",
+        },
+        bunny: {
+          viewBox: "0 0 465.43 505.58",
+          d: "M233.71,505.46c121.5,3.15,231.69-52.71,231.71-148.63.02-80.2-57.11-115.07-57.11-115.07,7.14-27.13,48.54-211.3-52.82-238.42-101.37-27.13-122.78,119.93-122.78,119.93,0,0-21.42-147.05-122.78-119.93C8.57,30.47,49.97,214.64,57.11,241.76,57.11,241.76-.02,276.63,0,356.83c.03,95.92,112.72,146.65,233.71,148.63Z",
+        },
+      };
+      const ANIMAL_NAMES = ["cat", "bear", "bunny"];
+      const SHAPE_SIZE = 10.2; // 形狀最長邊的長度
+      const OUTLINE_N = 360; // 輪廓取樣點數
+      const svgLoader = new SVGLoader();
+      const outlineCache = {};
 
-      function outlinePoints(kind) {
-        const pts = [];
-        for (let i = 0; i < OUTLINE_SAMPLES; i++) {
-          const t = (i / OUTLINE_SAMPLES) * Math.PI * 2;
-          let x, y;
-          if (kind === "heart") {
-            const s = 0.31;
-            x = 16 * Math.pow(Math.sin(t), 3) * s;
-            y =
-              (13 * Math.cos(t) -
-                5 * Math.cos(2 * t) -
-                2 * Math.cos(3 * t) -
-                Math.cos(4 * t) +
-                2.5) *
-              s;
-          } else if (kind === "flower") {
-            const r = 4.3 + 0.4 * Math.cos(6 * t);
-            x = r * Math.cos(t);
-            y = r * Math.sin(t);
-          } else {
-            x = 4.68 * Math.cos(t);
-            y = 4.68 * Math.sin(t);
-          }
-          pts.push(new THREE.Vector2(x, y));
+      function polygonArea(pts) {
+        let a = 0;
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          const q = pts[(i + 1) % pts.length];
+          a += p.x * q.y - q.x * p.y;
         }
-        if (THREE.ShapeUtils.isClockWise(pts)) pts.reverse();
+        return a / 2;
+      }
+
+      // 封閉多邊形依照周長平均重新取樣
+      function resampleClosed(pts, n) {
+        const L = [0];
+        for (let i = 1; i <= pts.length; i++)
+          L.push(L[i - 1] + pts[i % pts.length].distanceTo(pts[i - 1]));
+        const total = L[L.length - 1];
+        const out = [];
+        let seg = 0;
+        for (let k = 0; k < n; k++) {
+          const s = (k / n) * total;
+          while (L[seg + 1] < s) seg++;
+          const a = pts[seg];
+          const b = pts[(seg + 1) % pts.length];
+          const t = (s - L[seg]) / Math.max(L[seg + 1] - L[seg], 1e-9);
+          out.push(a.clone().lerp(b, t));
+        }
+        return out;
+      }
+
+      function circleOutline() {
+        const pts = [];
+        for (let i = 0; i < OUTLINE_N; i++) {
+          const t = (i / OUTLINE_N) * Math.PI * 2;
+          pts.push(new THREE.Vector2(4.68 * Math.cos(t), 4.68 * Math.sin(t)));
+        }
         return pts;
       }
 
-      // 每個點往外的方向（平滑過，愛心的凹口才不會打結）
-      function outlineNormals(outline) {
-        const N = outline.length;
-        const raw = outline.map((p, i) => {
-          const a = outline[(i - 1 + N) % N];
-          const b = outline[(i + 1) % N];
+      function svgOutline(name) {
+        if (outlineCache[name]) return outlineCache[name];
+        try {
+          const { viewBox, d } = SVG_SHAPES[name];
+          const data = svgLoader.parse(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${d}"/></svg>`,
+          );
+          let raw = [];
+          for (const path of data.paths)
+            for (const shape of SVGLoader.createShapes(path)) {
+              const p = shape.getSpacedPoints(OUTLINE_N * 4);
+              if (Math.abs(polygonArea(p)) > Math.abs(polygonArea(raw)))
+                raw = p;
+            }
+          // 去掉重複點，SVG 的 y 軸朝下，翻過來
+          let pts = [];
+          for (const p of raw) {
+            const v = new THREE.Vector2(p.x, -p.y);
+            if (!pts.length || pts[pts.length - 1].distanceTo(v) > 1e-6)
+              pts.push(v);
+          }
+          if (pts[0].distanceTo(pts[pts.length - 1]) < 1e-6) pts.pop();
+          // 置中、縮放
+          const box = new THREE.Box2().setFromPoints(pts);
+          const c = box.getCenter(new THREE.Vector2());
+          const size = box.getSize(new THREE.Vector2());
+          const s = SHAPE_SIZE / Math.max(size.x, size.y);
+          pts = pts.map((p) => p.sub(c).multiplyScalar(s));
+          if (polygonArea(pts) < 0) pts.reverse(); // 統一成逆時針
+          pts = resampleClosed(pts, OUTLINE_N);
+          // 稍微磨圓尖角，像真的模具倒出來的巧克力
+          for (let it = 0; it < 2; it++) {
+            pts = pts.map((p, i) => {
+              const a = pts[(i - 1 + OUTLINE_N) % OUTLINE_N];
+              const b = pts[(i + 1) % OUTLINE_N];
+              return p
+                .clone()
+                .multiplyScalar(0.5)
+                .addScaledVector(a.clone().add(b), 0.25);
+            });
+          }
+          outlineCache[name] = pts;
+          return pts;
+        } catch (err) {
+          console.warn("SVG outline failed:", name, err);
+          return circleOutline();
+        }
+      }
+
+      let lastAnimal = null;
+      function pickAnimal() {
+        const names = ANIMAL_NAMES.filter((n) => n !== lastAnimal);
+        lastAnimal = names[Math.floor(Math.random() * names.length)];
+        return lastAnimal;
+      }
+
+      function outlinePoints(kind) {
+        if (kind === "heart") return svgOutline("heart");
+        if (kind === "animal") return svgOutline(pickAnimal());
+        return circleOutline();
+      }
+
+      // ==========================================
+      // 錫箔杯：沿著每個點的法線往外撐，
+      // 凹進去的地方紙會交疊 → 自動把交疊的那一小圈收成一點，就不會破圖
+      // ==========================================
+      function outlineNormals(pts) {
+        const N = pts.length;
+        const raw = pts.map((p, i) => {
+          const a = pts[(i - 1 + N) % N];
+          const b = pts[(i + 1) % N];
           return new THREE.Vector2(b.y - a.y, -(b.x - a.x)).normalize();
         });
         return raw.map((_, i) => {
           const s = new THREE.Vector2();
-          for (let k = -6; k <= 6; k++) s.add(raw[(i + k + N) % N]);
+          for (let k = -3; k <= 3; k++) s.add(raw[(i + k + N) % N]);
           return s.normalize();
         });
+      }
+
+      function segIntersect(a, b, c, d) {
+        const r = b.clone().sub(a);
+        const s = d.clone().sub(c);
+        const den = r.x * s.y - r.y * s.x;
+        if (Math.abs(den) < 1e-12) return null;
+        const ca = c.clone().sub(a);
+        const t = (ca.x * s.y - ca.y * s.x) / den;
+        const u = (ca.x * r.y - ca.y * r.x) / den;
+        if (t < 0 || t > 1 || u < 0 || u > 1) return null;
+        return a.clone().addScaledVector(r, t);
+      }
+
+      // 把自己交叉形成的小圈圈（只看較短的那一段）收成交點
+      function removeLoops(q) {
+        const N = q.length;
+        const W = Math.floor(N / 3);
+        for (let i = 0; i < N; i++) {
+          const a = q[i];
+          const b = q[(i + 1) % N];
+          for (let k = W; k >= 2; k--) {
+            const j = (i + k) % N;
+            const X = segIntersect(a, b, q[j], q[(j + 1) % N]);
+            if (X) {
+              for (let m = 1; m <= k; m++) q[(i + m) % N].copy(X);
+              i += k - 1;
+              break;
+            }
+          }
+        }
+        return q;
+      }
+
+      function offsetOutline(pts, normals, distOf) {
+        return removeLoops(
+          pts.map((p, i) => p.clone().addScaledVector(normals[i], distOf(i))),
+        );
       }
 
       function buildBaseGeometry(outline) {
         const shape = new THREE.Shape(outline);
         let g = new THREE.ExtrudeGeometry(shape, {
-          depth: 1.2,
+          depth: 2.0,
           bevelEnabled: true,
           bevelThickness: 0.15,
           bevelSize: 0.12,
@@ -894,7 +1035,7 @@
           curveSegments: 1,
         });
         g.rotateX(-Math.PI / 2);
-        g.translate(0, -0.6, 0); // 頂面在 y = 0.75
+        g.translate(0, -1.0, 0); // 厚度 2.3，頂面在 y = 1.15
         g.deleteAttribute("uv");
         g.deleteAttribute("normal");
         g = mergeVertices(g, 1e-4);
@@ -917,16 +1058,13 @@
         const positions = [];
         for (let r = 0; r <= ROWS; r++) {
           const h = r / ROWS;
-          const y = -0.85 + 1.7 * h;
-          const offset = 0.17 + 0.65 * h; // 底部貼著巧克力，上緣往外翻
-          for (let i = 0; i < N; i++) {
+          const y = -1.25 + 2.5 * h;
+          const offset = 0.24 + 0.62 * h; // 底部貼著巧克力，上緣往外翻
+          const row = offsetOutline(outline, normals, (i) => {
             const phase = (arc[i] / perimeter) * pleats * Math.PI * 2;
-            const crinkle = Math.sin(phase) * 0.15 * (0.1 + 0.9 * h);
-            const d = offset + crinkle;
-            const p = outline[i];
-            const n = normals[i];
-            positions.push(p.x + n.x * d, y, -(p.y + n.y * d));
-          }
+            return offset + Math.sin(phase) * 0.15 * (0.1 + 0.9 * h);
+          });
+          for (const p of row) positions.push(p.x, y, -p.y);
         }
         const index = [];
         for (let r = 0; r < ROWS; r++) {
@@ -949,17 +1087,16 @@
       }
 
       function buildCupBottom(outline) {
-        const normals = outlineNormals(outline);
-        const pts = outline.map(
-          (p, i) =>
-            new THREE.Vector2(
-              p.x + normals[i].x * 0.17,
-              p.y + normals[i].y * 0.17,
-            ),
-        );
+        const row = offsetOutline(outline, outlineNormals(outline), () => 0.24);
+        const pts = [];
+        for (const p of row)
+          if (!pts.length || pts[pts.length - 1].distanceTo(p) > 1e-4)
+            pts.push(p);
+        if (pts.length > 2 && pts[0].distanceTo(pts[pts.length - 1]) < 1e-4)
+          pts.pop();
         const g = new THREE.ShapeGeometry(new THREE.Shape(pts));
         g.rotateX(-Math.PI / 2);
-        g.translate(0, -0.85, 0);
+        g.translate(0, -1.25, 0);
         return g;
       }
 
@@ -979,7 +1116,9 @@
       foilGroup.position.y = 0.09;
       masterGroup.add(foilGroup);
 
+      let currentShape = "round";
       function buildBase(kind) {
+        currentShape = kind;
         const outline = outlinePoints(kind);
         baseChocolate.geometry.dispose();
         cupMesh.geometry.dispose();
@@ -1392,7 +1531,16 @@
           }),
         );
       }
-      bindChips("[data-shape]", (chip) => buildBase(chip.dataset.shape));
+      // 動物按鈕每按一次就換一隻
+      document
+        .querySelector('[data-shape="animal"]')
+        .addEventListener("click", () => {
+          if (currentShape === "animal") buildBase("animal");
+        });
+      bindChips("[data-shape]", (chip) => {
+        if (chip.dataset.shape !== "animal" || currentShape !== "animal")
+          buildBase(chip.dataset.shape);
+      });
       bindChips("[data-base]", (chip) => baseMat.color.set(chip.dataset.base));
 
       document.getElementById("undo-btn").addEventListener("click", () => {
@@ -1406,6 +1554,8 @@
       });
 
       document.getElementById("clear-btn").addEventListener("click", () => {
+        // 動物模式下，新的一顆會換成另一隻動物
+        if (currentShape === "animal") buildBase("animal");
         [chocolateGroup, sprinkleGroup].forEach((group) => {
           for (let i = group.children.length - 1; i >= 0; i--) {
             const child = group.children[i];
@@ -1501,7 +1651,7 @@
           if (child.isMesh) child.castShadow = false;
         });
         if (bitesTaken >= 5) {
-          masterGroup.visible = false;
+          // 最後一口已經把巧克力和裝飾全部吃光，只留下空的錫箔杯
           document.getElementById("oishii-msg").style.display = "block";
           infoEl.innerHTML = "按「もう1コ作る ↺」再來一顆！🎀";
         }
