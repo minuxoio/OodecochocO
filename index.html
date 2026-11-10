@@ -1350,12 +1350,38 @@
         }
       }
 
+      // 畫過的每一筆都記下中心點和粗細，新的線經過時會「爬」到上面
+      // （細線疊在粗線上也看得到）
+      let strokeSamples = [];
+
       function strokePoint(hitData) {
-        // 每一筆比上一筆高一點點，交叉時新的線會乾淨地疊在上面
         const lift = Math.min(strokeLayer * 0.004, 0.2);
-        return hitData.point
+        const p = hitData.point
           .clone()
-          .add(hitData.normal.clone().multiplyScalar(TUBE_RADIUS * 0.7 + lift));
+          .addScaledVector(hitData.normal, TUBE_RADIUS * 0.7 + lift);
+        let topY = -Infinity;
+        for (const s of strokeSamples) {
+          if (s.owner === currentLineMesh) continue; // 自己這一筆不算
+          const d = Math.max(
+            0,
+            Math.hypot(p.x - s.x, p.z - s.z) - TUBE_RADIUS * 0.5,
+          );
+          if (d < s.R)
+            topY = Math.max(topY, s.y + Math.sqrt(s.R * s.R - d * d));
+        }
+        if (topY > -Infinity)
+          p.y = Math.max(p.y, topY + TUBE_RADIUS * 0.55 + lift * 0.25);
+        return p;
+      }
+
+      function recordSample(p) {
+        strokeSamples.push({
+          x: p.x,
+          y: p.y,
+          z: p.z,
+          R: TUBE_RADIUS,
+          owner: currentLineMesh,
+        });
       }
 
       function makeCap(pos) {
@@ -1409,6 +1435,7 @@
         chocolateGroup.add(currentLineMesh);
         currentActionMeshes.push(currentLineMesh);
         rebuildTube();
+        recordSample(currentPoints[0]);
         makeCap(currentPoints[0]);
         currentEndCap = makeCap(currentPoints[1]);
       }
@@ -1435,11 +1462,15 @@
 
         if (!currentLineMesh) return;
         // 手指抖動平滑化
-        smoothPoint.lerp(strokePoint(hitData), 0.5);
+        const target = strokePoint(hitData);
+        smoothPoint.lerp(target, 0.5);
+        // 往上爬要立刻爬上去，不然線頭會先鑽進別的線裡
+        smoothPoint.y = Math.max(smoothPoint.y, target.y);
         const lastPoint = currentPoints[currentPoints.length - 1];
         const minDist = Math.max(0.08, TUBE_RADIUS * 0.5);
         if (lastPoint.distanceTo(smoothPoint) > minDist) {
           currentPoints.push(smoothPoint.clone());
+          recordSample(smoothPoint);
           rebuildTube();
           currentEndCap.position.copy(smoothPoint);
         }
@@ -1462,6 +1493,9 @@
 
       function cancelStroke() {
         if (!isDrawing) return;
+        strokeSamples = strokeSamples.filter(
+          (s) => s.owner !== currentLineMesh,
+        );
         if (currentLineMesh) currentLineMesh.geometry.dispose();
         currentActionMeshes.forEach((mesh) => {
           if (mesh.parent) mesh.parent.remove(mesh);
@@ -1546,6 +1580,9 @@
       document.getElementById("undo-btn").addEventListener("click", () => {
         if (actionHistory.length === 0) return;
         const lastAction = actionHistory.pop();
+        strokeSamples = strokeSamples.filter(
+          (s) => !lastAction.includes(s.owner),
+        );
         lastAction.forEach((mesh) => {
           if (mesh.geometry && mesh.geometry.type === "TubeGeometry")
             mesh.geometry.dispose();
@@ -1565,6 +1602,7 @@
           }
         });
         actionHistory = [];
+        strokeSamples = [];
         strokeLayer = 0;
         bitesTaken = 0;
         biteUniforms.numBites.value = 0;
